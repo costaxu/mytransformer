@@ -5,7 +5,7 @@ from utils import list2sentence, tensor2sentence, translate_sentence, save_check
 from torch.utils.data import DataLoader
 from dataset import NumberDataset
 from model import Transformer
-from sklearn.model_selection import train_test_split
+#from sklearn.model_selection import train_test_split
 
 
 # hyperparameters 1
