@@ -133,7 +133,7 @@ mode = "train"
 
 print(f"--------start training--------")
 
-# load_checkpoint(torch.load("my_checkpoint.pth.tar"), model, optimizer)   
+load_checkpoint(torch.load("my_checkpoint.pth.tar"), model, optimizer)   
 
 for epoch in range(EPOCHS):
     print(f"[Epoch {epoch} / {EPOCHS}]")
@@ -144,15 +144,16 @@ for epoch in range(EPOCHS):
     }
     save_checkpoint(checkpoint)
     
-    model.eval()
+    if epoch % 10 == 0:
+        model.eval()
 
-    sentence = "经济危机的不断加深使我们看到了危机过后的世界是什么样子的。"
+        sentence = "经济危机的不断加深使我们看到了危机过后的世界是什么样子的。"
 
-    translated_sentence = translate_sentence(
-        model, sentence,  zh_vocab, en_ivocab, DEVICE, max_len=50
-    )
-    print(translated_sentence)
-    model.train()
+        translated_sentence = translate_sentence(
+            model, sentence,  zh_vocab, en_ivocab, DEVICE, max_len=50
+        )
+        print(translated_sentence)
+        model.train()
     losses = []
 
     for idx, (src, trg) in enumerate(train_loader):

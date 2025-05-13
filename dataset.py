@@ -3,7 +3,7 @@ import torch
 from torchtext.data.utils import get_tokenizer
 from torch.utils.data import Dataset
 
-TOTAL_DATA_NUM = 5000
+TOTAL_DATA_NUM = 10000
 
 spacy_zh = spacy.load('zh_core_web_sm')
 spacy_en = spacy.load('en_core_web_sm')
@@ -32,7 +32,7 @@ class WordDataset(Dataset):
         return src_tokens, trg_tokens
     
 class NumberDataset(Dataset):
-    def __init__(self, src_file, trg_file, src_vocab, trg_vocab, max_len):
+    def __init__(self, src_file, trg_file, src_vocab, trg_vocab, max_len, store=True):
         self.src_lines = open(src_file, encoding='utf-8').readlines()
         self.trg_lines = open(trg_file, encoding='utf-8').readlines()
 
@@ -45,9 +45,61 @@ class NumberDataset(Dataset):
         self.src_vocab = src_vocab
         self.trg_vocab = trg_vocab
         self.max_len = max_len
+        if store:
+            self.store_tensors()
+        #     self.__getitem__ = self.__getitem1__
+        # else:
+        #     self.__getitem__ = self.__getitem2__
 
+    def store_tensors(self):
+        print("start storing tensors")
+        self.tensors = []
+        for idx in range(len(self.src_lines)):
+            if idx % 100 == 0:
+                print(idx)
+            src_line = self.src_lines[idx]
+            trg_line = self.trg_lines[idx]
+
+            src_tokens = [tok.text for tok in spacy_zh(src_line)]
+            trg_tokens = [tok.text for tok in spacy_en(trg_line)]
+
+            src_nums = []
+            trg_nums = []
+
+            for word in src_tokens:
+                try:
+                    src_nums.append(self.src_vocab[word])
+                except KeyError:
+                    pass
+            
+            src_nums.insert(0, 1)
+            src_nums.append(2)
+
+            src_res = [0] * self.max_len
+            src_res[:len(src_nums)] = src_nums
+            src_ret = torch.tensor(src_res)
+
+            for word in trg_tokens:
+                try:
+                    trg_nums.append(self.trg_vocab[word])
+                except KeyError:
+                    pass
+
+            trg_nums.insert(0, 1)
+            trg_nums.append(2)
+            
+            trg_res = [0] * self.max_len
+            trg_res[:len(trg_nums)] = trg_nums
+            trg_ret = torch.tensor(trg_res)
+
+            self.tensors.append((src_ret, trg_ret))
+        print("end storing tensors")
+    
     def __len__(self):
         return len(self.src_lines)
+    
+    def __getitem1__(self, idx):
+        return self.tensors[idx]
     
     def __getitem__(self, idx):
         src_line = self.src_lines[idx]
